@@ -1,0 +1,276 @@
+/*
+    Cada usuario meu (zd_user) tem um atributo de tipo image , onde o objeto image tem varios atributos que sao :
+        -   private long id_image;  //O id no banco de dados 
+        -   private byte[] image_content;   // o conteudo da imagem em bytes
+        -   private String content; // o conteudo da imagem em base64
+        -   private String image_mime;      // a extensao da imagem como por exemplo (jpg..)
+        -   private long userlogin_id;  // o id do usuario que ela pertence 
+        
+    
+*/
+
+//Aqui o formilario onde a foto vai aparecer, vai mostrar o que ele tem fixo no db, e qdo for trocar ela mostra a foto temporaria.
+
+
+<form class="col-md-12" action="${pageContext.request.contextPath}/User/showEditCurrentPic.action" id="picture_form" method="POST" enctype="multipart/form-data" >
+                            <div class="picture">
+                                // o div da classe change_picture que aparece qdo passar mouse em cima da foto para poder trocar a foto
+                                <div class="change_picture">&nbsp;Alterar foto&nbsp;<span class="glyphicon glyphicon-pencil"></span></div>
+                                    
+                                    <c:choose>
+                                        //aqui quando a imagem temporaria foi colocada na sessao , isso quer dizer, quando o usuario faz upload de uma nova foto, o metodo showEditCurrentPic ira pegar a foto,salvar temporariamente no db e colocar na sessao a variavel ImageSession contendo o conteudo da imagem na base64
+                                        se esa variavel existe, isto quer dizer que o usuario fez upload de uma novo foto e precisa mostra-la
+                                        
+                                        <c:when test="${ImageSession != null}">
+                                        //mostrar a foto na base 64
+                                        <img class="img-responsive" src="data:image/${imageMime};base64,${ImageSession}" alt="no picture"/>
+                                    </c:when>
+                                    // aqui um jeito de verificar e o usuario tem uma foto no objeto dele, qdo fizer login, eu busco tudo do usuario como foto e todas as informacoes dele, e com isso o atributo image estara com valor da imagem dele que indica que ele tem foto, verifiquei isso atravez do atributo image_mime se diferente de nulo, se ele nao tiver foto , estara nulo
+                                    <c:when test="${zd_user.image.image_mime != null}">
+                                    //mostrar a foto do usuario na base64
+                                        <img class="img-responsive" src="data:image/${zd_user.image.image_mime};base64,${zd_user.image.content}" alt="No picture"/>
+                                        <c:set var="filePartSession" value="${filePartSession}"></c:set>
+                                    </c:when>
+                                    //se o usuario nao tem foto, mostrar uma foto default para nao ficar sem foto
+                                    <c:when test="${zd_user.image.image_mime == null}">
+                                        <img class="img-responsive" src="${pageContext.request.contextPath}/img/default_pic.jpg" alt="no picture"/>
+                                    </c:when>
+                                </c:choose>
+                                // o input file que permite ao usuario fazer upload da nova imagem, aceita so imagens,na minha pagina, fiz ele do tamanho do div da imagem que fica em cima dele, e com opacity 0, qdo clicar na foto, na vdd esta clicando no input file e com isso abre a janela de upload.
+                                ao mudar p valor dele(fazer upload de algo) o metodo onchange sera chamado e ela faz submit do formulario atraves do javascript 
+                                <input type="file" onchange="submitViewForm()"  id="input_profile_pic" name="picture" size="50" accept="image/*" />
+
+                            </div>
+                            //esta condicao quer dizer que o usuario fez upload e a imagem esta na sessao, e com isso dou acesso a salvar esta nova imagem 
+                            <c:if test="${ImageSession !=null}">
+                                //Faco remove do atributo ImageSession apos listar na pagina pra evitar erros,e qdo fizer refresh ele perde essa foto ( pode tirar no java qdo salvar e asssim fica salvo na sessao mas se ele sair da pagina para outra vai ficar no temp da sessao e vai ficar mostrando a foto que ta no temp)
+                                <c:remove var="ImageSession" ></c:remove>
+
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <br>
+                                    //button de salvar, qdo for clicado mando o camhinho da aplicacao (pageContext...) para mudar o action do form e fazer submit e salvar a nova foto como fixa e tirar do temp 
+                                    <button type="button" class="btn btn-primary btn-block "  value="Salvar nova fota" onclick="submitEditProfilePic('${pageContext.request.contextPath}')">Salvar nova fota</button>
+                                </div>
+                            </div>
+
+                            </c:if>
+                        </form>
+                        
+                        
+                        
+                        //Javascript
+                        //submeter o form qdo o usuario fizer upload de uma imagem
+                        function submitViewForm(contextPath) {
+                            var form = document.getElementById("picture_form");
+                            form.submit();
+                        }       
+                        
+                        //O metodo remove o action atual do form e coloca um novo chamando o metodo editProfilePic e faz submit do form.
+                        function submitEditProfilePic(contextPath) {
+
+                            var form = document.getElementById("picture_form");
+                            form.removeAttribute("action");
+                            form.setAttribute("action", contextPath + "/User/editProfilePic.action");
+                            form.submit();
+                        }
+                        
+                        
+                        
+                        
+                        //Java
+                        O metodo showEditCurrentPic que mostra a foto temporaria 
+                        //chama o metodo  addTempPicToDB() . que adiciona a foto no db, criei este metodo para poder ser re-utilizada qdo //fizer signup e quiser colocar foto :) 
+                        //e faz return para a pagina de perfil no caso 
+                        public String showEditCurrentPic() {
+                            addTempPicToDB();
+                            return "/WEB-INF/jsp/User/account_redirect.jsp";
+                        }
+                        
+                        
+                        
+                        public void addTempPicToDB() {
+                            //Pegar o request que veio para recuperar os atributos (pode ter outra estrutura depende de como vc implementou //suas actions. ou commands seguindo cacique)
+                            
+                            HttpServletRequest request = this.getRequest();
+                            //Crio um objeto image para salvar a imagem
+                            Image image = new Image();
+                            //Um fluxo de dados que tera as informacoes da imagem
+                            InputStream inputStream = null;
+                            
+                            //O tipo de objeto que suporta o upload do usuario e salva 
+                            Part filePart;
+
+                            try {
+                                //recuperar o que o usuario fez upload e salvar no objeto filePart
+                                filePart = request.getPart("picture");
+                                //Transformar o que o usuario colocou para um fluxo de dados de entrada
+                                inputStream = filePart.getInputStream();
+                                //o metodo getSubmittedFileName  retorna o nome verdadeiro da imagem que o usuario mandou
+                                //faco split com o ponto para pegar a extensao da imagem para o atributo image_mime..
+                                String imageMimeSplit[] = filePart.getSubmittedFileName().split("\\.");
+                                
+                                int length;
+                                //Um vetor de bytes para fluxo de dados de saida.. ( exatemente nao sei:P)
+                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                //crio um vetor de bytes de tamanho 1024
+                                byte[] buffer = new byte[1024];
+                                //vai lendo o fluxo de dados de entrada e re-escrever isso no vetor de bytes de saida (bos)
+                                //enquanto nao acabou (diferente que -1 )  ele escrreve no vetor
+                                while ((length = inputStream.read(buffer, 0, 1024)) != -1) {
+                                    bos.write(buffer, 0, length);
+                                }
+                                
+                                //transformar o fluxo de dados de saida para bytes e guardar no vetor buffer
+                                buffer = bos.toByteArray();
+                                //salvar esse vetor de bytes no objeto imagem
+                                image.setImage_content(buffer);
+                                //fechar o fluxo de dados
+                                inputStream.close();
+                                //Pegar a ultima posicao do split que seria a extensao da foto
+                                String imageMime = imageMimeSplit[imageMimeSplit.length - 1];
+                                //Fazer encode do conteudo da imagem de byetes para base64
+                                String encoded = Base64.getEncoder().encodeToString(buffer);
+                                //salvar o tipo da imagem no objeto image
+                                image.setImage_mime(imageMime);
+                                //Salvar o conteudo da imagem como base64 no objeto image
+                                image.setContent(encoded);
+                                
+                                //Pegar o usuario loggado na sessao
+                                Userlogin user = (Userlogin) request.getSession().getAttribute("zd_user");
+                                //Criar um dao da image que tera os metodos de manipulacao da imagem
+                                ImageUserDAO imageDAO = new ImageUserDAO();
+                                //O resultado da operacao de dao
+                                boolean result = false;
+                                //A chave da imagem caso for inserir uma nova imagem
+                                long key = -1;
+                                //Dao de usuario
+                                UserloginDAO userDAO = new UserloginDAO();
+                                //Manipulara erro
+                                boolean error = false;
+
+                                //Salvar o id do usuario no objeto da imagem para a relacao no db ( foreign key)
+                                image.setUserlogin_id(user.getId_userlogin());
+                                
+                                //Cada usuario tambem alem do objeto de imagem que tem, tem tambem um outro objeto do tipo Image mas com nome de Image_temp. se o usuario tem o objeto image tem diferente de nulo e o id da image temp diferente de 0 ( diferente de nulo para long) isto quer dizer que ele ja colocou uma foto no temp e nao permito inserir uma nova imagem de temp, so atualizo a foto de temp que ele tem , para evitar o excesso de dados no db, assim cada usuario pode ter no maximo uma foto no temp
+                                
+                                if (user.getImage_temp() != null && user.getImage_temp().getId_image() != 0) {
+                                    //Continue editing the temp image!
+                                    //settar o id da imagem que acabou de fazer upload, com o id da foto temp que esta no db para modifca-la
+                                    //image.setId_image(user.getImage_temp().getId_image());
+                                    
+                                    //atualizar a foto temporaria no db
+                                    result = imageDAO.modify(image);
+                                    //se der erro o metodo retorna false
+                                    if (!result) {
+                                        error = true;
+                                    }
+                                } else {
+                                    //se o usuario nao tem foto no temp
+                                    //Insert a new temp image as the user does not have!
+                                    key = imageDAO.insert(image, true);
+                                    //se a insercao der errado retorna -1
+                                    if (key == -1) {
+                                        error = true;
+                                    } else {
+                                    //se der certo adiciono o id da foto temp no usuario isto para saber que este usuario ja tem uma foto no //temp
+                                        userDAO.addTempImgId(user.getId_userlogin(), key);
+                                    }
+                                }
+
+                                if (error) {
+                                //se der erro mostro um erro 
+                                    request.getSession().setAttribute("error", "Ops.. um erro ocorreu na seleção da foto!");
+                                } else {
+                                //se der tudo certo removo tudo da sessao e atualiza o usuario na sessao
+                                    request.getSession().setAttribute("zd_user", userDAO.findById(user.getId_userlogin()));
+                                    request.getSession().setAttribute("ImageSession", encoded);
+                                    request.getSession().setAttribute("imageMime", imageMime);
+                                }
+
+                            } catch (IOException | ServletException ex) {
+                                Logger.getLogger(UserloginAction.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                        }
+                        
+                        
+                        // o metodo de salvar a nova foto para o usuario 
+                        public String editProfilePic() {
+                        //chama o metodo para inserir a nova foto como fixa
+                            boolean result = insertImage();
+                            HttpServletRequest request = this.getRequest();
+
+                            if (result) {
+                            //se a foto foi inserida com sucesso, pego o usuario que esta no sessao, atualizo ele pegando ele de novo do db.
+                            //e colocar uma mensagem que deu certo na sessao
+                                UserloginDAO dao = new UserloginDAO();
+                                Userlogin user = (Userlogin) request.getSession().getAttribute("zd_user");
+                                request.getSession().setAttribute("alertMessage", "Foto de perfil atualizada com sucesso!");
+                                request.getSession().setAttribute("zd_user", dao.findById(user.getId_userlogin()));
+                            }
+                            //retorna para a pagina de perfil
+                            return "/WEB-INF/jsp/User/account_redirect.jsp";
+                        }
+                        
+                        //o metodo de inserir a nova foto 
+                        public boolean insertImage() {
+                            HttpServletRequest request = this.getRequest();
+                            //pegar o usuario da sessao 
+                            Userlogin user = (Userlogin) request.getSession().getAttribute("zd_user");
+                            //Criar um objeto de tipo image
+                            Image image = new Image();
+
+                            boolean result = false;
+
+                            ImageUserDAO imageDAO = new ImageUserDAO();
+                            //Achar a foto temporaria que foi inserida no db 
+                            image = imageDAO.findById(user.getImage_temp().getId_image());
+                            //salvar o id da foto temporaria que esta no banco de dados.
+                            long temp_id = image.getId_image();
+                            
+                            //remover a foto temporaria do banco de dados
+                            imageDAO.removeById(temp_id);
+                            
+                            //settar o id da foto temporaria pega de banco dedados com o id da foto fixa do usuario para modifcar ela 
+                            image.setId_image(user.getImage().getId_image());
+
+                            //Modifico a foto fixa do usuario , este metodo ira salvar o novo byte no db 
+                            result = imageDAO.modify(image);
+                            
+                            if (!result) {
+                            //se nao der certo, mostra um erro
+                                request.getSession().setAttribute("error", "Erro na alteração da foto do perfil. Tente novamente!");
+                            } else {
+                            //se der certo 
+                            //remove o id da foto temporaria do usuario e atualiza o usuario na sessao 
+                            
+                                UserloginDAO userDAO = new UserloginDAO();
+                                result = userDAO.removeTempImgId(user.getId_userlogin());
+                                if (result) {
+                                    request.getSession().setAttribute("zd_user", userDAO.findById(user.getId_userlogin()));
+                                    request.getSession().removeAttribute("ImageSession");
+                                    request.getSession().removeAttribute("imageMime");
+                                }
+
+                            }
+                            return result;
+                        }
+                        
+                        
+
+                        
+                        //Um help para o dao , quando for buscar a foto de db , como so preciso salvar o byte no banco de dados, precisa //fazer a codificao para base64 , pra qdo fizer login salvar o conteudo da imagem como base64
+                         while(result!=null && result.next()){
+                
+                            image = new Image(result.getLong("id_image"));
+                            Blob blob = result.getBlob("image_content");
+                            int blobLength = (int) blob.length();
+                            byte[] blobAsBytes = blob.getBytes(1, blobLength);
+                            String encoded = Base64.getEncoder().encodeToString(blobAsBytes);
+                            image.setContent(encoded);
+                            image.setImage_content(blob.getBytes(1, (int)blob.length()));
+                            blob.free();
+                            image.setImage_mime(result.getString("image_mime"));
+                            image.setUserlogin_id(result.getLong("userlogin_id"));
+                        }
