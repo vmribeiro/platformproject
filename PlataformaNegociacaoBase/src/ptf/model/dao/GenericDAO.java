@@ -10,6 +10,7 @@ import java.util.List;
  */
 public interface GenericDAO<E> {
     public boolean save(E e);
+    public boolean update(E e);
     public boolean remove(long id);
     public E findById(long id);
     public List<E> findAll();

@@ -3,6 +3,7 @@
   <persistence-unit name="PlataformaPU" transaction-type="RESOURCE_LOCAL">
     <provider>org.hibernate.ejb.HibernatePersistence</provider>
     <class>ptf.model.entities.UserLogin</class>
+    <class>ptf.model.entities.UserProfile</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/negociacao_db"/>
       <property name="javax.persistence.jdbc.user" value="root"/>

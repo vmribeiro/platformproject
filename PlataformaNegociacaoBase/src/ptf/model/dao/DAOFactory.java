@@ -10,7 +10,7 @@ public class DAOFactory {
     private DAOFactory() {
     }
     
-    public static UserLoginDAO getUserLoginDAO() {
-        return new UserLoginDAO();
+    public static UserDAO getUserLoginDAO() {
+        return new UserDAO();
     }
 }

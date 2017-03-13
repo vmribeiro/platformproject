@@ -1,11 +1,13 @@
 package ptf.model.entities;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 /**
@@ -18,7 +20,7 @@ public class UserLogin implements Serializable{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usuario_login")
+    @Column(name = "id")
     private long idLogin;
     
     @Column(name = "email_usuario")
@@ -28,9 +30,21 @@ public class UserLogin implements Serializable{
     private String senha;
     
     @Column(name = "tipo_usuario")
-    private int tipo;
+    private int type;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    private UserProfile userProfile;
+
 
     public UserLogin() {
+    }
+    
+    public UserProfile getUserProfile() {
+        return userProfile;
+    }
+
+    public void setUserProfile(UserProfile up) {
+        this.userProfile = up;
     }
 
     public long getIdLogin() {
@@ -57,16 +71,16 @@ public class UserLogin implements Serializable{
         this.senha = senha;
     }
 
-    public int getTipo() {
-        return tipo;
+    public int getType() {
+        return type;
     }
 
-    public void setTipo(int tipo) {
-        this.tipo = tipo;
+    public void setType(int type) {
+        this.type = type;
     }
 
     @Override
     public String toString() {
-        return "UserLogin{" + "idLogin=" + idLogin + ", email=" + email + ", senha=" + senha + ", tipo=" + tipo + '}';
+        return "UserLogin{" + "idLogin=" + idLogin + ", email=" + email + ", senha=" + senha + ", type=" + type + ", userProfile=" + userProfile + '}';
     }
 }
