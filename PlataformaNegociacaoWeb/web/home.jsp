@@ -17,6 +17,8 @@
         <a href="FrontControllerServlet?control=User&action=forwardToUpdatePage&id=${user.idLogin}">Editar Perfil</a>
         ${link}
         ${answer}
+        <img src="${user.userProfile.getBase64Avatar()}"/>
+        ${user.userProfile.getBase64Avatar()}
     </body>
 </html>
 

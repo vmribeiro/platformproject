@@ -8,13 +8,15 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Perfil</title>
+        <link rel="stylesheet" type="text/css" href="css/validation.css">
     </head>
     <body>
         <h1>Alterar informações</h1>
         <br><hr>
-        <form method="post" action="FrontControllerServlet?control=User&action=update&id=${user.idLogin}">
+        <form method="post" action="FrontControllerServlet?control=User&action=update&id=${user.idLogin}" onsubmit="return $(this).validateValuesUser()">
             <p>
                 <label for="email">Digite o email: </label>
                 <input type="text" name="email" id="email" value="${user.email}"/>
@@ -47,13 +49,13 @@
                 Selecione o estado: 
                 <select id="estados" name="countryState">
                     <option value="${user.userProfile.countryState}" selected=""></option>
-		</select>
+                </select>
             </p>
             <p>
                 Selecione a cidade:  
                 <select id="cidades" name="city">
                     <option value="${user.userProfile.city}" selected=""></option>
-		</select>
+                </select>
             </p>
             <p>
                 <label for="cep">Digite o cep: </label>
@@ -70,7 +72,24 @@
             <input type="submit" value="Registrar"/>
         </form>            
         <br>${answer}
+        
+        <p class="red not-display" id="error-name">Nome incompleto ou com caracteres não permitidos.</p>
+        <p class="red not-display" id="error-lastname">Sobrenome incompleto ou com caracteres não permitidos.</p>
+        <p class="red not-display" id="error-email">Email incompleto ou com caracteres não permitidos.</p>
+        <p class="red not-display" id="error-phone">Celular incompleto ou com caracteres não permitidos.</p>
+        <p class="red-text not-display" id="error-pass-regex">
+            A senha deve possuir um mínimo de 8 caracteres, sendo: 1 letra maiúscula, 1 letra minúscula, 1 número e 1 caractere especial.
+        </p>
+        <p class="red not-display" id="error-pass">Senhas não coincidem.</p>
+        <p class="red not-display" id="error-cep">CEP incompleto.</p>
+        <p class="red not-display" id="error-cpf">CPF incompleto.</p>
+        <p class="red not-display" id="error-city">Escolha um estado e uma cidade.</p>
+        <p class="red not-display" id="error-rg">RG incompleto.</p>
+        <p class="red not-display" id="error-date">Data incompleta.</p>
+        
         <script src="js/jquery-3.1.1.min.js"></script>
         <script src="js/estados_cidades.js"></script>
+        <script src="js/jquery.maskedinput.min.js"></script>
+        <script src="js/userFrontValidation.js"></script>
     </body>
 </html>

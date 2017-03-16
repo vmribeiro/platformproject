@@ -2,9 +2,12 @@ package ptf.model.entities;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -55,12 +58,13 @@ public class UserProfile implements Serializable {
     private Date dtaNasc;
 
     @Lob
-    @Column(length = 100000, name = "avatar_usuario")
+    @Column(name = "avatar_usuario")
+    @Basic(fetch = FetchType.LAZY)
     private byte[] avatar;
-    
+
     @Column(name = "nota_anunciante")
     private Double advertiserMark;
-    
+
     @Column(name = "qtd_negociacoes_anunciante")
     private Integer negociationsNumber;
 
@@ -142,14 +146,14 @@ public class UserProfile implements Serializable {
     public Date getDtaNasc() {
         return dtaNasc;
     }
-    
-    public String getFormattedDtaNasc(){
+
+    public String getFormattedDtaNasc() {
         String result = null;
-        
+
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        
+
         result = sdf.format(dtaNasc);
-        
+
         return result;
     }
 
@@ -163,6 +167,16 @@ public class UserProfile implements Serializable {
 
     public void setAvatar(byte[] avatar) {
         this.avatar = avatar;
+    }
+
+    public String getBase64Avatar() {
+        if (avatar != null) {
+            String result = "data:image/jpg;base64,";
+            result += Base64.getEncoder().encodeToString(avatar);
+            return result;
+        } else {
+            return "";
+        }
     }
 
     public Double getAdvertiserMark() {
@@ -185,5 +199,5 @@ public class UserProfile implements Serializable {
     public String toString() {
         return "UserProfile{" + "idPerfil=" + idPerfil + ", nameUser=" + nameUser + ", lastnameUser=" + lastnameUser + ", cpf=" + cpf + ", rg=" + rg + ", countryState=" + countryState + ", city=" + city + ", cep=" + cep + ", phone=" + phone + ", dtaNasc=" + dtaNasc + ", avatar=" + avatar + ", advertiserMark=" + advertiserMark + ", negociationsNumber=" + negociationsNumber + '}';
     }
-    
+
 }

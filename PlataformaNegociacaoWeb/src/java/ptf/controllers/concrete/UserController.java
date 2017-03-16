@@ -1,5 +1,7 @@
 package ptf.controllers.concrete;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -77,7 +79,7 @@ public class UserController extends AbstractController {
         up.setLastnameUser(this.getRequest().getParameter("lastname"));
         up.setNameUser(this.getRequest().getParameter("name"));
         up.setNegociationsNumber(0);
-        up.setPhone(this.getRequest().getParameter("rg"));
+        up.setPhone(this.getRequest().getParameter("phone"));
         up.setRg(this.getRequest().getParameter("rg"));
         UserLogin ul = new UserLogin();
         ul.setEmail(this.getRequest().getParameter("email"));
@@ -86,11 +88,8 @@ public class UserController extends AbstractController {
         ul.setUserProfile(up);
 
         if (udao.save(ul)) {
-            this.setReturnPage(""
-                    + "FrontControllerServlet?control=User&"
-                    + "action=login&"
-                    + "email=" + ul.getEmail() + "&"
-                    + "password=" + ul.getSenha());
+            this.setReturnPage("index.jsp");
+            setSession("answer", "Cadastro efetuado!");
         } else {
             setSession("answer", "Erro ao fazer o registro! Tente novamente");
             this.setReturnPage("cadastro.jsp");
@@ -100,14 +99,13 @@ public class UserController extends AbstractController {
 
     private void update() {
         DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-        
+
         UserLogin ul = udao.findById(Long.parseLong(this.getRequest().getParameter("id")));
         ul.setEmail(this.getRequest().getParameter("email"));
         ul.setSenha(this.getRequest().getParameter("password"));
         ul.setType(1);
         //Take the parameters and initialize the objects
         ul.getUserProfile().setAdvertiserMark(0.0);
-        ul.getUserProfile().setAvatar(null);
         ul.getUserProfile().setCep(this.getRequest().getParameter("cep"));
         ul.getUserProfile().setCity(this.getRequest().getParameter("city"));
         ul.getUserProfile().setCountryState(this.getRequest().getParameter("countryState"));
@@ -120,11 +118,8 @@ public class UserController extends AbstractController {
         ul.getUserProfile().setLastnameUser(this.getRequest().getParameter("lastname"));
         ul.getUserProfile().setNameUser(this.getRequest().getParameter("name"));
         ul.getUserProfile().setNegociationsNumber(0);
-        ul.getUserProfile().setPhone(this.getRequest().getParameter("rg"));
+        ul.getUserProfile().setPhone(this.getRequest().getParameter("phone"));
         ul.getUserProfile().setRg(this.getRequest().getParameter("rg"));
-        
-        System.out.println("================================================================================"
-                + "\nestado=" + ul.getUserProfile().getCountryState());
 
         if (udao.update(ul)) {
             this.setReturnPage("home.jsp");
